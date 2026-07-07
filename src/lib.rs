@@ -44,6 +44,21 @@ fn command_registry() -> &'static [CommandSpec] {
             arity: Arity::AtLeast(1),
             handler: handle_absolute_sum_of_int_list,
         },
+        CommandSpec {
+            name: "burp_nr",
+            arity: Arity::Exact(1),
+            handler: handle_burp_nr,
+        },
+        CommandSpec {
+            name: "solid_clump_of_hashes",
+            arity: Arity::AtLeast(1),
+            handler: handle_solid_clump_hashes,
+        },
+        CommandSpec {
+            name: "more_odd_in_list",
+            arity: Arity::AtLeast(1),
+            handler: handle_more_odd,
+        },
     ]
 }
 
@@ -59,6 +74,14 @@ fn parse_exact_arity(command: &str, args: &[String], expected: usize) -> Result<
 
 fn parse_required_int(command: &str, value: &str, label: &str) -> Result<i32, Box<dyn Error>> {
     value.parse::<i32>().map_err(|error| {
+        invalid_input(format!(
+            "{command} failed to parse {label} as integer: {error}"
+        ))
+    })
+}
+
+fn parse_required_uint(command: &str, value: &str, label: &str) -> Result<u32, Box<dyn Error>> {
+    value.parse::<u32>().map_err(|error| {
         invalid_input(format!(
             "{command} failed to parse {label} as integer: {error}"
         ))
@@ -114,7 +137,26 @@ fn handle_absolute_sum_of_int_list(args: &[String]) -> Result<String, Box<dyn Er
     Ok(arithmetics::absolute_sum_of_int_list(&values).to_string())
 }
 
+fn handle_burp_nr (args: &[String]) -> Result<String, Box<dyn Error>> {
+    let r_count = parse_required_uint ("Burp_nr", &args[0], "r_count")? as usize;
+    Ok(string_manip::burp_nr(r_count))
+}
 
+fn handle_solid_clump_hashes (args: &[String]) -> Result<String, Box<dyn Error>> {
+    Ok(string_manip::solid_clump_of_hashes(&args.join("")).to_string())
+}
+
+fn handle_more_odd (args: &[String]) -> Result<String, Box<dyn Error>> {
+    let values = args
+        .iter()
+        .enumerate()
+        .map(|(index, value)| {
+            parse_required_int("more_odd_in_list", value, &format!("argument {index}"))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+
+    Ok(arithmetics::more_odd_in_list(&values).to_string())
+}
 
 // endregion: handler functions -------------------------------------------------------------------
 
