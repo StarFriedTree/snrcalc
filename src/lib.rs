@@ -59,8 +59,25 @@ fn command_registry() -> &'static [CommandSpec] {
             arity: Arity::AtLeast(1),
             handler: handle_more_odd,
         },
+        CommandSpec {
+            name: "count_words_in_sentence",
+            arity: Arity::AtLeast(1),
+            handler: handle_count_words_in_sentence,
+        },
+        CommandSpec {
+            name: "count_distinct_quadratic_roots",
+            arity: Arity::Exact(3),
+            handler: handle_count_distinct_quadratic_roots,
+        },
+        CommandSpec {
+            name: "last_digit_c_equals_of_ab",
+            arity: Arity::Exact(3),
+            handler: handle_last_digit_c_equals_of_ab,
+        }
     ]
 }
+
+// region: -- dispatcher --------------------------------------------------------------------------
 
 fn parse_exact_arity(command: &str, args: &[String], expected: usize) -> Result<(), Box<dyn Error>> {
     if args.len() == expected {
@@ -107,6 +124,7 @@ fn dispatch(command: &str, args: &[String]) -> Result<String, Box<dyn Error>> {
     (spec.handler)(args)
 }
 
+// endregion: dispatcher --------------------------------------------------------------------------
 
 // region: -- handler functions -------------------------------------------------------------------
 
@@ -156,6 +174,28 @@ fn handle_more_odd (args: &[String]) -> Result<String, Box<dyn Error>> {
         .collect::<Result<Vec<_>, _>>()?;
 
     Ok(arithmetics::more_odd_in_list(&values).to_string())
+}
+
+fn handle_count_words_in_sentence (args: &[String]) -> Result<String, Box<dyn Error>> {
+    Ok(string_manip::count_words_in_sentence(&args.join(" ")).to_string())
+}
+
+fn handle_last_digit_c_equals_of_ab (args: &[String]) -> Result<String, Box<dyn Error>> {
+    let command = "last_digit_c_equals_of_ab";
+    let a = parse_required_int(&command, &args[0], "a")?;
+    let b = parse_required_int(&command, &args[1], "b")?;
+    let c = parse_required_int(&command, &args[2], "c")?;
+
+    Ok(arithmetics::last_digit_c_equals_of_ab(a, b, c).to_string())
+}
+
+fn handle_count_distinct_quadratic_roots (args: &[String]) -> Result<String, Box<dyn Error>> {
+    let command = "count_distinct_quadratic_roots";
+    let a = parse_required_int(&command, &args[0], "a")?;
+    let b = parse_required_int(&command, &args[1], "b")?;
+    let c = parse_required_int(&command, &args[2], "c")?;
+
+    Ok(arithmetics::count_distinct_quadratic_roots(a, b, c).to_string())
 }
 
 // endregion: handler functions -------------------------------------------------------------------

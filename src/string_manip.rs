@@ -18,6 +18,10 @@ pub fn solid_clump_of_hashes (clump: &str) -> bool {
     true
 }
 
+pub fn count_words_in_sentence (sentence: &str) -> i32 {
+    sentence.trim().split(" ").count() as i32
+}
+
 
 #[cfg(test)]
 mod tests {
