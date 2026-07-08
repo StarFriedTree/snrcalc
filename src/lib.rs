@@ -138,6 +138,20 @@ where
     })
 }
 
+fn adapt_str_char<R, F>(command: &'static str, f: F) -> CommandHandler
+where
+    R: ToString,
+    F: Fn(&str, &char) -> R + 'static,
+{
+    Box::new(move |args: &[String]| {
+        if args.len() != 2 {
+            return Err(invalid_input(format!("{command} expects exactly 2 arguments")));
+        }
+        let replacement = parse_arg::<char>(command, &args[1], "argument 2")?;
+        Ok(f(&args[0], &replacement).to_string())
+    })
+}
+
 /// All args joined into a single string before being passed on. `join_with` controls the
 /// separator ("" for concatenation, " " for sentence-style joins).
 fn adapt_joined<R, F>(command: &'static str, join_with: &'static str, f: F) -> CommandHandler
@@ -225,6 +239,10 @@ fn command_registry() -> Vec<CommandSpec> {
             adapt1("multiplication_table_to_ten", arithmetics::multiplication_table_to_ten)
         ),
         spec("terminals_of_list", adapt_list("terminals_of_list", arithmetics::terminals_of_list)),
+        spec("is_alpha_only", adapt_joined("is_alpha_only", " ", string_manip::is_alpha_only)),
+        spec("count_three_equal", adapt3("count_three_equal", arithmetics::count_three_equal)),
+        spec("multiplication_table_to_n", adapt2("multiplication_table_to_n", arithmetics::multiplication_table_to_n)),
+        spec("replace_vowels", adapt_str_char("replace_vowels", string_manip::replace_vowels)),
     ]
 }
 

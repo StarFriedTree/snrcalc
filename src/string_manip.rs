@@ -30,6 +30,15 @@ pub fn repeat_each_char (text: &str) -> String {
     text.chars().flat_map(|c| [c, c]).collect()
 }
 
+pub fn is_alpha_only (text: &str) -> bool {
+    text.chars().all(|c| c.is_alphabetic())
+}
+
+pub fn replace_vowels (text: &str, replacement: &char) -> String {
+    text.chars().map(|c| if "aeiouAEIOU".contains(c) {*replacement} else {c}).collect()
+}
+
+
 
 
 #[cfg(test)]

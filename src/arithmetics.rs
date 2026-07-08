@@ -69,6 +69,20 @@ pub fn terminals_of_list (list: &[i32]) -> String {
     format!("[{}, {}]", list[0], list[list.len() - 1])
 }
 
+pub fn count_three_equal (a: i32, b: i32, c: i32) -> u8 {
+    if a == b && b == c {3}
+    else if a != b && b != c && c != a {0}
+    else {2}
+}
+
+pub fn multiplication_table_to_n (num: i32, len: u16) -> String{
+    let mut table: Vec<i32> = Vec::with_capacity(len as usize);
+    for i in 1..=len as i32 {
+        table.push(i * num);
+    }
+    format!("{table:?}")
+}
+
 
 
 
