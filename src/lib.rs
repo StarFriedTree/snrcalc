@@ -11,6 +11,17 @@ type CommandHandler = Box<dyn Fn(&[String]) -> Result<String, Box<dyn Error>>>;
 struct CommandSpec {
     name: &'static str,
     handler: CommandHandler,
+    if_fails: &'static str,
+}
+
+/// Registry entry with no hint (the common case).
+fn spec(name: &'static str, handler: CommandHandler) -> CommandSpec {
+    CommandSpec { name, handler, if_fails: "" }
+}
+
+/// Registry entry with a hint appended to the error message on failure.
+fn spec_hinted(name: &'static str, handler: CommandHandler, if_fails: &'static str) -> CommandSpec {
+    CommandSpec { name, handler, if_fails }
 }
 
 fn invalid_input(message: impl Into<String>) -> Box<dyn Error> {
@@ -147,67 +158,50 @@ where
 
 fn command_registry() -> Vec<CommandSpec> {
     vec![
-        CommandSpec {
-            name: "add_two_ints",
-            handler: adapt2("add_two_ints", arithmetics::add_two_ints),
-        },
-        CommandSpec {
-            name: "reverse_string",
-            handler: adapt_str("reverse_string", string_manip::reverse_string),
-        },
-        CommandSpec {
-            name: "syllable_count_in_hyphenated_word",
-            handler: adapt_str(
+        spec("add_two_ints", adapt2("add_two_ints", arithmetics::add_two_ints)),
+        spec("reverse_string", adapt_str("reverse_string", string_manip::reverse_string)),
+        spec(
+            "syllable_count_in_hyphenated_word",
+            adapt_str(
                 "syllable_count_in_hyphenated_word",
                 string_manip::syllable_count_in_hyphenated_word,
             ),
-        },
-        CommandSpec {
-            name: "absolute_sum_of_int_list",
-            handler: adapt_list("absolute_sum_of_int_list", arithmetics::absolute_sum_of_int_list),
-        },
-        CommandSpec {
-            name: "burp_nr",
-            handler: adapt1("burp_nr", string_manip::burp_nr),
-        },
-        CommandSpec {
-            name: "solid_clump_of_hashes",
-            handler: adapt_joined("solid_clump_of_hashes", "", string_manip::solid_clump_of_hashes),
-        },
-        CommandSpec {
-            name: "more_odd_in_list",
-            handler: adapt_list("more_odd_in_list", arithmetics::more_odd_in_list),
-        },
-        CommandSpec {
-            name: "count_words_in_sentence",
-            handler: adapt_joined(
-                "count_words_in_sentence",
-                " ",
-                string_manip::count_words_in_sentence,
-            ),
-        },
-        CommandSpec {
-            name: "count_distinct_quadratic_roots",
-            handler: adapt3(
+        ),
+        spec(
+            "absolute_sum_of_int_list",
+            adapt_list("absolute_sum_of_int_list", arithmetics::absolute_sum_of_int_list),
+        ),
+        spec("burp_nr", adapt1("burp_nr", string_manip::burp_nr)),
+        spec(
+            "solid_clump_of_hashes",
+            adapt_joined("solid_clump_of_hashes", "", string_manip::solid_clump_of_hashes),
+        ),
+        spec(
+            "more_odd_in_list",
+            adapt_list("more_odd_in_list", arithmetics::more_odd_in_list),
+        ),
+        spec(
+            "count_words_in_sentence",
+            adapt_joined("count_words_in_sentence", " ", string_manip::count_words_in_sentence),
+        ),
+        spec(
+            "count_distinct_quadratic_roots",
+            adapt3(
                 "count_distinct_quadratic_roots",
                 arithmetics::count_distinct_quadratic_roots,
             ),
-        },
-        CommandSpec {
-            name: "last_digit_c_equals_of_ab",
-            handler: adapt3(
-                "last_digit_c_equals_of_ab",
-                arithmetics::last_digit_c_equals_of_ab,
-            ),
-        },
-        CommandSpec {
-            name: "positive_descending_pair",
-            handler: adapt2("positive_descending_pair", arithmetics::positive_descending_pair),
-        },
-        CommandSpec {
-            name: "vowel_counter",
-            handler: adapt_joined("vowel_counter", " ", string_manip::vowel_counter),
-        },
+        ),
+        spec(
+            "last_digit_c_equals_of_ab",
+            adapt3("last_digit_c_equals_of_ab", arithmetics::last_digit_c_equals_of_ab),
+        ),
+        spec_hinted(
+            "positive_descending_pair",
+            adapt2("positive_descending_pair", arithmetics::positive_descending_pair),
+            "both arguments need to be positive integers",
+        ),
+        spec("vowel_counter", adapt_joined("vowel_counter", " ", string_manip::vowel_counter)),
+        
     ]
 }
 
@@ -217,7 +211,13 @@ fn dispatch(command: &str, args: &[String]) -> Result<String, Box<dyn Error>> {
         .find(|entry| entry.name == command)
         .ok_or_else(|| invalid_input(format!("unknown command: {command}")))?;
 
-    (spec.handler)(args)
+    (spec.handler)(args).map_err(|error| {
+        if spec.if_fails.is_empty() {
+            error
+        } else {
+            invalid_input(format!("{error}\nNote: {}", spec.if_fails))
+        }
+    })
 }
 
 pub fn runner(args: impl Iterator<Item = String>) -> Result<String, Box<dyn Error>> {
