@@ -29,6 +29,11 @@ pub fn count_distinct_quadratic_roots (a: i32, b: i32, c: i32) -> u8 {
     }
 }
 
+pub fn positive_descending_pair (a: u32, b: u32) -> &'static str {
+    if a > b {"Valid"} else {"Invalid"}
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;

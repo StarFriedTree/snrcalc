@@ -22,6 +22,10 @@ pub fn count_words_in_sentence (sentence: &str) -> i32 {
     sentence.trim().split(" ").count() as i32
 }
 
+pub fn vowel_counter (text: &str) -> u32 {
+    text.chars().filter(|&b| "aeiouAEIOU".contains(b)).count() as u32
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -34,4 +38,13 @@ mod tests {
         assert_eq!(positive, true);
         assert_eq!(negative, false);
     }
+
+    #[test]
+    fn test_vowel_counter() {
+        let one = vowel_counter("bob");
+        let three = vowel_counter ("Eleven");
+        assert_eq! (1, one);
+        assert_eq! (3, three);
+    }
+
 }
