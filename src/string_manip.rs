@@ -26,6 +26,11 @@ pub fn vowel_counter (text: &str) -> u32 {
     text.chars().filter(|&b| "aeiouAEIOU".contains(b)).count() as u32
 }
 
+pub fn repeat_each_char (text: &str) -> String {
+    text.chars().flat_map(|c| [c, c]).collect()
+}
+
+
 
 #[cfg(test)]
 mod tests {
@@ -45,6 +50,15 @@ mod tests {
         let three = vowel_counter ("Eleven");
         assert_eq! (1, one);
         assert_eq! (3, three);
+    }
+
+    #[test]
+    fn test_char_repeater () {
+        let hello = repeat_each_char ("hello");
+        let dragon = repeat_each_char("Dragon");
+
+        assert_eq! ("hheelllloo", hello);
+        assert_eq! ("DDrraaggoonn", dragon);
     }
 
 }

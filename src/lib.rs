@@ -201,7 +201,30 @@ fn command_registry() -> Vec<CommandSpec> {
             "both arguments need to be positive integers",
         ),
         spec("vowel_counter", adapt_joined("vowel_counter", " ", string_manip::vowel_counter)),
-        
+        spec("repeat_each_char", adapt_joined("repeat_each_char", " ", string_manip::repeat_each_char)),
+        spec(
+            "max_pair_difference_in_list", 
+            adapt_list("max_pair_difference_in_list", arithmetics::max_pair_difference_in_list)
+        ),
+        spec_hinted(
+            "sum_of_first_n_positive_ints", 
+            adapt1("sum_of_first_n_positive_ints", arithmetics::sum_of_first_n_positive_ints),
+            "expected a single positive integer",
+        ),
+        spec(
+            "positive_even_negative_odd", 
+            adapt1("positive_even_negative_odd", arithmetics::positive_even_negative_odd)
+        ),
+        spec(
+            "count_negatives_in_list", 
+            adapt_list("count_negatives_in_list", arithmetics::count_negatives_in_list)
+        ),
+        spec("sum_of_even_in_list", adapt_list("sum_of_even_in_list", arithmetics::sum_of_even_in_list)),
+        spec(
+            "multiplication_table_to_ten", 
+            adapt1("multiplication_table_to_ten", arithmetics::multiplication_table_to_ten)
+        ),
+        spec("terminals_of_list", adapt_list("terminals_of_list", arithmetics::terminals_of_list)),
     ]
 }
 

@@ -33,6 +33,44 @@ pub fn positive_descending_pair (a: u32, b: u32) -> &'static str {
     if a > b {"Valid"} else {"Invalid"}
 }
 
+pub fn max_pair_difference_in_list (list: &[i32]) -> u32 {
+    let min = list.iter().min().unwrap_or(&0);
+    let max = list.iter().max().unwrap_or(&0);
+    (*max - *min) as u32 
+}
+
+pub fn sum_of_first_n_positive_ints (num: u32) -> u64 {
+    let n = num as u64;
+    (n * (n + 1)) / 2
+}
+
+pub fn positive_even_negative_odd (num: i32) -> &'static str {
+    if num % 2 == 0 && num.is_positive() { return "+even" }
+    if num % 2 == -1 { return "-odd" }
+
+    "+number-"
+}
+
+pub fn count_negatives_in_list (list: &[i32]) -> u32 {
+    list.iter().filter(|&n| n.is_negative()).count() as u32
+}
+
+pub fn sum_of_even_in_list (list: &[i32]) -> i32 {
+    list.iter().filter(|&n| n % 2 == 0).sum::<i32>()
+}
+
+pub fn multiplication_table_to_ten (num: i32) -> String {
+    let table: [i32; 10] = std::array::from_fn(|i| (i as i32 + 1) * num);
+
+    format!("{table:?}")
+}
+
+pub fn terminals_of_list (list: &[i32]) -> String {
+    format!("[{}, {}]", list[0], list[list.len() - 1])
+}
+
+
+
 
 #[cfg(test)]
 mod tests {
@@ -65,6 +103,15 @@ mod tests {
         assert_eq! (0u8, zero);
         assert_eq! (1u8, one);
         assert_eq! (2u8, two);
+    }
+
+    #[test]
+    fn test_pair_diff_in_list () {
+        let three = max_pair_difference_in_list(&[2, 1, 0, -1]);
+        let thirteen = max_pair_difference_in_list(&[2, 4, 7, 2, -2, -6, 7]);
+
+        assert_eq! (3, three);
+        assert_eq! (13, thirteen);
     }
 
 }
