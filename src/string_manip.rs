@@ -38,8 +38,66 @@ pub fn replace_vowels (text: &str, replacement: &char) -> String {
     text.chars().map(|c| if "aeiouAEIOU".contains(c) {*replacement} else {c}).collect()
 }
 
+pub fn shift_cipher_one (text: &str) -> String {
+    // let mut result = String::with_capacity(text.len());
+    // for c in text.chars() {
+    //     if c.is_ascii_alphabetic() && c != 'z' && c != 'Z' {
+    //         result.push((c as u8 + 1) as char);
+    //     } 
+    //     else if c == 'z' || c == 'Z' {
+    //         result.push((c as u8 - 25) as char);
+    //     } 
+    //     else {
+    //         result.push(c);
+    //     }
+    // }
+    // result
+    // old solution ^ idk which one's better tho
 
+    text.chars()
+        .map(|c| {
+            if c.is_ascii_alphabetic() {
+                let base = if c.is_ascii_uppercase() {b'A'} else {b'a'};
 
+                (((c as u8 - base + 1) % 26) + base) as char
+            } else {c}
+        })
+        .collect()
+    
+}
+
+pub fn check_palindrome (text: &str) -> bool {
+    let cleaned = text.chars()
+        .filter(|c| !c.is_whitespace())
+        .flat_map(|c| c.to_lowercase());
+
+    cleaned.clone().eq(cleaned.rev())
+}
+
+pub fn filter_4letter_words_from_list (list: &[&str]) -> String {
+    format!( "{:?}",
+        list.iter().filter(|word| word.len() == 4).collect::<Vec::<_>>()
+    )
+}
+
+pub fn same_amount_of_x_o (text: &str) -> bool {
+    text.bytes()
+        .fold(0, |balance: i32, c| match c {
+            b'x' | b'X' => balance + 1,
+            b'o' | b'O' => balance - 1,
+            _ => balance,
+        }) == 0
+}
+
+pub fn longest_word_in_sentence (text: &str) -> String {
+    text.trim()
+        .split_ascii_whitespace()
+        .max_by_key(|word| 
+                word.chars().filter(|c| !c.is_ascii_punctuation()).count()
+            )
+        .unwrap_or("")
+        .to_string()
+}
 
 #[cfg(test)]
 mod tests {

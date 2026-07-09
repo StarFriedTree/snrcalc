@@ -1,5 +1,6 @@
 pub mod arithmetics;
 pub mod string_manip;
+pub mod array_manip;
 
 use std::error::Error;
 use std::fmt::Display;
@@ -118,6 +119,44 @@ where
             .enumerate()
             .map(|(index, value)| parse_arg::<T>(command, value, &format!("argument {index}")))
             .collect::<Result<Vec<_>, _>>()?;
+        Ok(f(&values).to_string())
+    })
+}
+
+fn adapt_1_list<T1, T2, R, F> (command: &'static str, f: F) -> CommandHandler
+where
+    T1: FromStr,
+    T1::Err: Display,
+    T2: FromStr,
+    T2::Err: Display,
+    R: ToString,
+    F: Fn(T1, &[T2]) -> R + 'static,
+{
+    Box::new(move |args: &[String]| {
+        if args.is_empty() {
+            return Err(invalid_input(format!("{command} expects at least 2 arguments")));
+        }
+        let item = parse_arg::<T1>(command, &args[0], "argument 1")?;
+        let values = args[1..]
+            .iter()
+            .enumerate()
+            .map(|(index, value)| parse_arg::<T2>(command, value, &format!("argument {index}")))
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(f(item, &values).to_string())
+    })
+}
+
+/// Any number of borrowed string args, for functions that operate on `&[&str]` directly.
+fn adapt_str_list<R, F>(command: &'static str, f: F) -> CommandHandler
+where
+    R: ToString,
+    F: Fn(&[&str]) -> R + 'static,
+{
+    Box::new(move |args: &[String]| {
+        if args.is_empty() {
+            return Err(invalid_input(format!("{command} expects at least 1 argument")));
+        }
+        let values: Vec<&str> = args.iter().map(String::as_str).collect();
         Ok(f(&values).to_string())
     })
 }
@@ -243,6 +282,22 @@ fn command_registry() -> Vec<CommandSpec> {
         spec("count_three_equal", adapt3("count_three_equal", arithmetics::count_three_equal)),
         spec("multiplication_table_to_n", adapt2("multiplication_table_to_n", arithmetics::multiplication_table_to_n)),
         spec("replace_vowels", adapt_str_char("replace_vowels", string_manip::replace_vowels)),
+        spec("shift_cipher_one", adapt_joined("shift_cipher_one", " ", string_manip::shift_cipher_one)),
+        spec("check_palindrome", adapt_joined("check_palindrome", " ", string_manip::check_palindrome)),
+        spec(
+            "filter_4letter_words_from_list",
+            adapt_str_list("filter_4letter_words_from_list", string_manip::filter_4letter_words_from_list),
+        ),
+        spec("same_amount_of_x_o", adapt_joined("same_amount_of_x_o", " ", string_manip::same_amount_of_x_o)),
+        spec(
+            "search_int_or_potential_index_in_sorted",
+            adapt_1_list("search_int_or_potential_index_in_sorted", array_manip::search_int_or_potential_index_in_sorted),
+        ),
+        spec(
+            "longest_word_in_sentence",
+            adapt_joined("longest_word_in_sentence", " ", string_manip::longest_word_in_sentence),
+        ),
+
     ]
 }
 
