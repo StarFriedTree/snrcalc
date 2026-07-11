@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use regex::Regex;
 
 pub fn absolute_sum_of_int_list (list: &[i32]) -> u32 {
    list.iter().map(|&num| num.abs() as u32).sum()
@@ -82,6 +83,118 @@ pub fn multiplication_table_to_n (num: i32, len: u16) -> String{
     }
     format!("{table:?}")
 }
+
+/// A milk carton can hold 3.78 liters of milk. Each morning, a dairy farm ships cartons
+/// of milk to a local grocery store. The cost of producing one liter of milk is $0.038, and
+/// the profit of each carton of milk is $0.27. Write a program that does the following:
+/// 1. Prompts the user to enter the total amount of milk produced in the morning.
+/// 2. Outputs the number of milk cartons needed to hold milk. (Round your answer to
+/// the nearest integer)
+/// 3. Outputs the cost of producing milk.
+/// 4. Outputs the profit for producing milk.
+pub fn milk_cartons_cost_profit (milk_amount: f64) -> String {
+    let cartons = (milk_amount / 3.78).round();
+    let cost = milk_amount * 0.038;
+    let profit = cartons * 0.27;
+    format!("{cartons} cartons; ${cost} in costs; ${profit} in profit")
+}
+
+pub fn sum_binary_to_binary (a: &[u8], b: &[u8]) -> String {
+    let (lrg, sml) = if a.len() < b.len() {(b, a)} else {(a, b)};
+
+    let zipped = lrg.iter().rev().zip(sml.iter().rev().chain(std::iter::repeat(&0)));
+
+    let mut result = Vec::<u8>::with_capacity(lrg.len() + 1);
+    let mut carry = 0u8;
+
+    for (&l, &s) in zipped {
+        let (sum, overflow1) = l.overflowing_add(s);
+        let (sum, overflow2) = sum.overflowing_add(carry);
+        result.push(sum);
+        carry = (overflow1 || overflow2) as u8;
+    }
+    if carry != 0 {
+        result.push(carry);
+    }
+
+    result
+        .iter()
+        .rev()
+        .map(|byte| format!("{byte:08b}"))
+        .collect::<Vec<String>>()
+        .join("_")
+}
+
+static ROMAN_RE: std::sync::LazyLock<Regex> = std::sync::LazyLock::new(|| {
+    Regex::new(r"^m{0,3}(cm|cd|d?c{0,3})(xc|xl|l?x{0,3})(ix|iv|v?i{0,3})$").unwrap()
+});
+
+pub fn is_valid_roman_numeral (num: &str) -> bool {
+    // if !num
+    //     .bytes ()
+    //     .all (|b| 
+    //         matches!(b.to_ascii_lowercase(), b'i' | b'v' | b'x' | b'l' | b'c' | b'd' | b'm')
+    //     ) {
+    //     return false;
+    // }
+
+    // let lower = num.to_ascii_lowercase();
+    // let forbidden_patterns = [
+    //     "iiii", "xxxx", "cccc", "mmmm",
+    //     "vv", "ll", "dd",
+    //     "iiv", "iix", "il", "ic", "id", "im",
+    //     "ivi", "ixi", "xlx", "xcx",
+    //     "vx", "vl", "vc", "vd", "vm",
+    //     "xxl", "xxc", "xd", "xm",
+    //     "lc", "ld", "lm",
+    //     "ccd", "ccm", "cdc", "cmc",
+    //     "dm",
+    // ];
+    // if forbidden_patterns.iter().any(|p| lower.contains(p)) {
+    //     return false;
+    // }
+
+    // true
+    ROMAN_RE.is_match(&num.to_ascii_lowercase())
+}
+
+pub fn roman_numeral_to_int (num: &str) -> u16 {
+    if !is_valid_roman_numeral (num) { return 0; }
+
+    let lower = num.to_ascii_lowercase();
+
+    // let mut iter = lower.chars();
+
+    let mut result = 0i16;
+    let mut iter = lower.chars().peekable();
+
+    while let Some(c) = iter.next() {
+        match c {
+            'm' => result += 1000,
+            'c' => {
+                if iter.peek() == Some(&'m') || iter.peek() == Some(&'d') {
+                    result -= 100;
+                } else { result += 100; }
+            },
+            'd' => result += 500,
+            'x' => {
+                if iter.peek() == Some(&'c') || iter.peek() == Some(&'l') {
+                    result -= 10;
+                } else { result += 10; }
+            },
+            'l' => result += 50,
+            'i' => {
+                if iter.peek() == Some(&'x') || iter.peek() == Some(&'v') {
+                    result -= 1;
+                } else { result -= 1; }
+            },
+            'v' => result += 5,
+            _ => panic!("did not find valid roman numeral while converting to int"),
+        }
+    }
+    result as u16
+}
+
 
 
 

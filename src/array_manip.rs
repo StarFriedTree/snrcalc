@@ -5,6 +5,15 @@ pub fn search_int_or_potential_index_in_sorted (item: i32, list: &[i32]) -> i32 
     }
 }
 
+pub fn digits_in_reverse (mut num: u32) -> String {
+    let mut digits = Vec::<u8>::with_capacity(9);
+    loop {
+        digits.push((num % 10) as u8);
+        num /= 10;
+        if num == 0 { break; }
+    }
+    format!{"{digits:?}"}
+}
 
 
 

@@ -39,6 +39,32 @@ where
         .map_err(|error| invalid_input(format!("{command} failed to parse {label}: {error}")))
 }
 
+fn parse_binary_bytes(command: &str, value: &str, label: &str) -> Result<Vec<u8>, Box<dyn Error>> {
+    let digits: String = value.chars().filter(|&c| c != '_').collect();
+
+    if digits.is_empty() {
+        return Err(invalid_input(format!("{command} failed to parse {label}: empty byte string")));
+    }
+    if digits.bytes().any(|byte| byte != b'0' && byte != b'1') {
+        return Err(invalid_input(format!(
+            "{command} failed to parse {label}: expected a binary string"
+        )));
+    }
+
+    let padding = (8 - digits.len() % 8) % 8;
+    let padded: String = std::iter::repeat('0').take(padding).chain(digits.chars()).collect();
+
+    padded
+        .as_bytes()
+        .chunks(8)
+        .map(|chunk| {
+            let chunk = std::str::from_utf8(chunk).expect("binary chunks are valid UTF-8");
+            u8::from_str_radix(chunk, 2)
+                .map_err(|error| invalid_input(format!("{command} failed to parse {label}: {error}")))
+        })
+        .collect()
+}
+
 // region: -- shape adapters -----------------------------------------------------------------
 // Each adapter captures a command name (for error messages) and a target function, and
 // returns a boxed closure matching the uniform CommandHandler signature. Adding a new
@@ -99,6 +125,38 @@ where
         let b = parse_arg::<T2>(command, &args[1], "argument 2")?;
         let c = parse_arg::<T3>(command, &args[2], "argument 3")?;
         Ok(f(a, b, c).to_string())
+    })
+}
+
+#[allow(dead_code)]
+fn adapt_bytes<R, F>(command: &'static str, f: F) -> CommandHandler
+where
+    R: ToString,
+    F: Fn(&[u8]) -> R + 'static,
+{
+    Box::new(move |args: &[String]| {
+        if args.len() != 1 {
+            return Err(invalid_input(format!("{command} expects exactly 1 argument")));
+        }
+
+        let bytes = parse_binary_bytes(command, &args[0], "argument")?;
+        Ok(f(&bytes).to_string())
+    })
+}
+
+fn adapt_bytes2<R, F>(command: &'static str, f: F) -> CommandHandler
+where
+    R: ToString,
+    F: Fn(&[u8], &[u8]) -> R + 'static,
+{
+    Box::new(move |args: &[String]| {
+        if args.len() != 2 {
+            return Err(invalid_input(format!("{command} expects exactly 2 arguments")));
+        }
+
+        let a = parse_binary_bytes(command, &args[0], "argument 1")?;
+        let b = parse_binary_bytes(command, &args[1], "argument 2")?;
+        Ok(f(&a, &b).to_string())
     })
 }
 
@@ -297,7 +355,25 @@ fn command_registry() -> Vec<CommandSpec> {
             "longest_word_in_sentence",
             adapt_joined("longest_word_in_sentence", " ", string_manip::longest_word_in_sentence),
         ),
-
+        spec_hinted(
+            "digits_in_reverse",
+            adapt1("digits_in_reverse", array_manip::digits_in_reverse),
+            "input must be a positive integer",
+        ),
+        spec(
+            "milk_cartons_cost_profit", adapt1("milk_cartons_cost_profit", arithmetics::milk_cartons_cost_profit),
+        ),
+        spec_hinted(
+            "sum_binary_to_binary",
+            adapt_bytes2("sum_binary_to_binary", arithmetics::sum_binary_to_binary),
+            "both inputs need to be in binary",
+        ),
+        spec(
+            "is_valid_roman_numeral",
+            adapt_str("is_valid_roman_numeral", arithmetics::is_valid_roman_numeral),
+        ),
+        spec("roman_numeral_to_int", adapt_str("roman_numeral_to_int", arithmetics::roman_numeral_to_int)),
+        
     ]
 }
 
@@ -324,4 +400,26 @@ pub fn runner(args: impl Iterator<Item = String>) -> Result<String, Box<dyn Erro
     let remaining_args: Vec<String> = args.collect();
 
     dispatch(&command, &remaining_args)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_binary_text_into_bytes() {
+        let bytes = parse_binary_bytes("sum_binary", "0101", "argument 1").unwrap();
+
+        assert_eq!(bytes, vec![0b00000101]);
+    }
+
+    #[test]
+    fn adapts_binary_args_as_byte_slices() {
+        let handler = adapt_bytes2("sum_binary", |a, b| format!("{a:?} {b:?}"));
+        let args = vec!["0101".to_string(), "0011".to_string()];
+
+        let result = handler(&args).unwrap();
+
+        assert_eq!(result, "[5] [3]");
+    }
 }
